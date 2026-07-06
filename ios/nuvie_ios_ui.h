@@ -15,6 +15,12 @@ extern "C" {
  * view for the given window. Safe to call more than once; only installs once. */
 void nuvie_ios_setup_ui(SDL_Window *window);
 
+/* Show/hide (or toggle) the iOS on-screen keyboard. When showing, the text
+ * input rect is positioned near the bottom of the screen so SDL lifts the game
+ * view above the keyboard, keeping the game's typed-text echo visible. */
+void nuvie_ios_show_keyboard(int show);
+void nuvie_ios_toggle_keyboard(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -37,10 +37,7 @@ static void nuvie_push_key(SDL_Keycode sym)
 - (void)onTap:(UIButton *)sender
 {
 	if(sender.tag == NUVIE_TAG_KEYBOARD) {
-		if(SDL_IsTextInputActive())
-			SDL_StopTextInput();
-		else
-			SDL_StartTextInput();
+		nuvie_ios_toggle_keyboard();
 		return;
 	}
 	nuvie_push_key((SDL_Keycode)sender.tag);
@@ -50,6 +47,32 @@ static void nuvie_push_key(SDL_Keycode sym)
 // Retain the target for the lifetime of the app so the button actions fire.
 static NuvieButtonTarget *g_btn_target = nil;
 static bool g_ui_installed = false;
+static SDL_Window *g_window = NULL;
+
+void nuvie_ios_show_keyboard(int show)
+{
+	if(show) {
+		// Position the text input rect low on the screen so SDL's keyboard
+		// handling lifts the game view up, keeping the area where U6 echoes
+		// what you type visible above the software keyboard.
+		if(g_window) {
+			int w = 0, h = 0;
+			SDL_GetWindowSize(g_window, &w, &h);
+			SDL_Rect r = { 0, (int)(h * 0.55), w, (int)(h * 0.45) };
+			SDL_SetTextInputRect(&r);
+		}
+		if(!SDL_IsTextInputActive())
+			SDL_StartTextInput();
+	} else {
+		if(SDL_IsTextInputActive())
+			SDL_StopTextInput();
+	}
+}
+
+void nuvie_ios_toggle_keyboard(void)
+{
+	nuvie_ios_show_keyboard(SDL_IsTextInputActive() ? 0 : 1);
+}
 
 static UIButton *nuvie_make_button(NSString *title, long tag, CGRect frame,
                                    NuvieButtonTarget *target)
@@ -89,6 +112,7 @@ void nuvie_ios_setup_ui(SDL_Window *window)
 		return;
 
 	g_ui_installed = true;
+	g_window = window;
 	g_btn_target = [[NuvieButtonTarget alloc] init];
 	NuvieButtonTarget *t = g_btn_target;
 

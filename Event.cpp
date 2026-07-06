@@ -25,6 +25,10 @@
 #include <cstring>
 #include "SDL.h"
 
+#ifdef NUVIE_IOS
+#include "nuvie_ios_ui.h"
+#endif
+
 #include "nuvieDefs.h"
 #include "U6misc.h"
 #include "Configuration.h"
@@ -180,10 +184,7 @@ bool Event::update() {
     // U6 keyboard command set (and conversation typing) reachable by touch.
     if (event.type == SDL_FINGERDOWN
         && SDL_GetNumTouchFingers(event.tfinger.touchId) == 2) {
-      if (SDL_IsTextInputActive())
-        SDL_StopTextInput();
-      else
-        SDL_StartTextInput();
+      nuvie_ios_toggle_keyboard();
       continue; // don't dispatch the second finger as a game click
     }
 #endif
