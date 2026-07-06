@@ -52,8 +52,28 @@ static CGRect g_full_frame;         // its normal, full-screen frame
 }
 
 // When the keyboard appears, scale the whole game down into the space above it
-// (via a transform, not a frame change: SDL rewrites its view's .frame in its
-// own keyboard handler, but leaves .transform alone) so nothing is cropped.
+// so nothing is cropped; restore full size when it hides.
+//
+// SDL rewrites its view's .frame in its own keyboard-notification handler.
+// Assigning a .frame while a transform is active corrupts the view's bounds,
+// so we (a) defer our change with dispatch_async so it runs *after* SDL's
+// handler, and (b) always reset transform + bounds to a known-good state first,
+// undoing any corruption, before applying the new scale.
+- (void)applyKeyboardScale:(CGFloat)scale
+{
+	if(g_root_view == nil)
+		return;
+	g_root_view.transform = CGAffineTransformIdentity;
+	g_root_view.bounds = CGRectMake(0, 0, g_full_frame.size.width,
+	                                g_full_frame.size.height);
+	if(scale < 1.0) {
+		CGFloat H = g_full_frame.size.height;
+		g_root_view.transform = CGAffineTransformConcat(
+		    CGAffineTransformMakeScale(scale, scale),
+		    CGAffineTransformMakeTranslation(0, -H * (1.0 - scale) / 2.0));
+	}
+}
+
 - (void)keyboardWillShow:(NSNotification *)note
 {
 	if(g_root_view == nil)
@@ -64,21 +84,13 @@ static CGRect g_full_frame;         // its normal, full-screen frame
 	CGFloat visibleH = kbLocal.origin.y;   // keyboard top, in view coords
 	if(H < 1.0 || visibleH < 120.0)
 		return;
-	CGFloat s = visibleH / H;              // scale so full height fits above kbd
-	// Scale around the centre, then lift so the top edge sits at y = 0.
-	CGAffineTransform tf = CGAffineTransformConcat(
-	    CGAffineTransformMakeScale(s, s),
-	    CGAffineTransformMakeTranslation(0, -H * (1.0 - s) / 2.0));
-	[UIView animateWithDuration:0.2 animations:^{ g_root_view.transform = tf; }];
+	CGFloat s = visibleH / H;
+	dispatch_async(dispatch_get_main_queue(), ^{ [self applyKeyboardScale:s]; });
 }
 
 - (void)keyboardWillHide:(NSNotification *)note
 {
-	if(g_root_view == nil)
-		return;
-	[UIView animateWithDuration:0.2 animations:^{
-		g_root_view.transform = CGAffineTransformIdentity;
-	}];
+	dispatch_async(dispatch_get_main_queue(), ^{ [self applyKeyboardScale:1.0]; });
 }
 @end
 
