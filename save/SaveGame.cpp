@@ -107,6 +107,15 @@ bool SaveGame::load_new()
  config_get_path(config,"lzobjblk",filename);
  data = lzw.decompress_file(filename, decomp_size);
 
+ if(data == NULL)
+ {
+   DEBUG(0, LEVEL_EMERGENCY,
+         "Failed to load '%s'. The game data is incomplete - LZOBJBLK is "
+         "missing from the gamedir. Cannot start a new game.\n",
+         filename.c_str());
+   return false;
+ }
+
  buf.open(data, decomp_size, NUVIE_BUF_NOCOPY);
 
  for(i=0;i<64;i++)
@@ -119,6 +128,15 @@ bool SaveGame::load_new()
 
  config_get_path(config,"lzdngblk",filename);
  data = lzw.decompress_file(filename,decomp_size);
+
+ if(data == NULL)
+ {
+   DEBUG(0, LEVEL_EMERGENCY,
+         "Failed to load '%s'. The game data is incomplete - LZDNGBLK is "
+         "missing from the gamedir. Cannot start a new game.\n",
+         filename.c_str());
+   return false;
+ }
 
  buf.open(data, decomp_size, NUVIE_BUF_NOCOPY);
 
