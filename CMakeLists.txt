@@ -673,6 +673,15 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
         XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "13.0")
 
+    # Physical-device code signing. Pass -DNUVIE_IOS_TEAM=<AppleTeamID> to sign
+    # with automatic provisioning; omit it for unsigned Simulator builds.
+    IF(NUVIE_IOS_TEAM)
+        set_target_properties(nuvie PROPERTIES
+            XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Automatic"
+            XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${NUVIE_IOS_TEAM}"
+            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "info.nuvie.daniel.ultima6")
+    ENDIF()
+
     # Bundle Nuvie's own data/ directory into the app (flat iOS bundle layout).
     add_custom_command(TARGET nuvie POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
