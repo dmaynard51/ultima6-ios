@@ -98,6 +98,23 @@ First-time device setup (one time each):
 
 Then tap the **Ultima VI** icon and hold the phone in **landscape**.
 
+### iPad
+
+The app is **universal** — the exact same build, scripts, and steps above work
+on iPad; the device just shows up as an iPad in `xcrun devicectl list devices`
+(the device script auto-picks the first connected iPhone *or* iPad). To try it in
+the **iPad Simulator**, boot an iPad instead of an iPhone:
+
+```sh
+xcrun simctl boot "iPad Pro (11-inch)" 2>/dev/null; open -a Simulator
+```
+
+Note: the on-screen controls were laid out for the iPhone's wide aspect ratio.
+On the iPad's more square (4:3) screen the game is letterboxed top/bottom, so the
+D-pad and action buttons still work but may not be positioned ideally — tap-to-walk,
+the command bar, and the keyboard button all behave the same. (If you mainly play
+on iPad, open an issue / ask and the button layout can be tuned for it.)
+
 ## 5. Playing — touch controls
 
 See [CONTROLS.md](CONTROLS.md). In short:
