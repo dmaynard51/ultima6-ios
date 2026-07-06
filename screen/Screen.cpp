@@ -1508,6 +1508,12 @@ bool Screen::init_sdl2_window(uint16 scale)
     if(non_square_pixels)
         window_scale_h *= 1.2;
 
+#ifdef NUVIE_IOS
+    // U6 is a landscape game (320x200). Lock the app to landscape so the render
+    // and touch input stay aligned regardless of how the device is held.
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
+#endif
+
     SDL_CreateWindowAndRenderer(width*window_scale_w, (int)(height*window_scale_h), SDL_WINDOW_SHOWN, &sdlWindow, &sdlRenderer);
     if(sdlWindow == NULL || sdlRenderer == NULL)
         return false;
