@@ -42,10 +42,15 @@
 
 #ifdef NUVIE_IOS
 #include <sys/stat.h>
-// Generate a ~/.nuvierc pointing at the read-only game data bundled inside the
-// app (data/ and ultima6/ under Resources) and a writable save directory inside
-// the app sandbox. Regenerated on every launch because the iOS container path
-// can change between installs/launches.
+#include <unistd.h>
+// Write a nuvie.cfg into the app's writable Documents directory and chdir there
+// so Nuvie's "nuvie.cfg in the working dir" config search picks it up. The
+// config points at the read-only game data bundled inside the app (data/ and
+// ultima6/ under Resources) and a writable save directory. We deliberately do
+// NOT use ~/.nuvierc: on a real device the sandbox forbids writing to the
+// container root, so that write silently fails (it only worked on the
+// Simulator). Regenerated on every launch because the container/bundle paths
+// can change between installs.
 static void nuvie_ios_setup()
 {
 	char resbuf[MAXPATHLEN] = "";
@@ -67,7 +72,11 @@ static void nuvie_ios_setup()
 	mkdir(docs.c_str(), 0755);
 	mkdir(savedir.c_str(), 0755);
 
-	std::string cfg = std::string(home) + "/.nuvierc";
+	// Remove any stale ~/.nuvierc written by older builds; it is searched before
+	// the working-dir nuvie.cfg and could point at a previous install's bundle.
+	unlink((std::string(home) + "/.nuvierc").c_str());
+
+	std::string cfg = docs + "/nuvie.cfg";
 	FILE *f = fopen(cfg.c_str(), "w");
 	if(f == NULL)
 		return;
@@ -106,6 +115,10 @@ static void nuvie_ios_setup()
 		"</config>\n",
 		res.c_str(), res.c_str(), savedir.c_str(), res.c_str(), res.c_str());
 	fclose(f);
+
+	// Nuvie searches for "nuvie.cfg" in the working directory, so make Documents
+	// the cwd. (savedir must be writable, which Documents is.)
+	chdir(docs.c_str());
 }
 #endif
 
