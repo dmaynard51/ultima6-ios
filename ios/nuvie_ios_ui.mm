@@ -63,9 +63,11 @@ static CGRect g_full_frame;         // its normal, full-screen frame
 {
 	if(g_root_view == nil)
 		return;
+	// Restore to the exact full-screen frame with no transform first (this
+	// undoes any position/size corruption from SDL assigning .frame while a
+	// transform was active), then apply the new scale around the centre.
 	g_root_view.transform = CGAffineTransformIdentity;
-	g_root_view.bounds = CGRectMake(0, 0, g_full_frame.size.width,
-	                                g_full_frame.size.height);
+	g_root_view.frame = g_full_frame;
 	if(scale < 1.0) {
 		CGFloat H = g_full_frame.size.height;
 		g_root_view.transform = CGAffineTransformConcat(
