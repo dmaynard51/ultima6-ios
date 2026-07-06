@@ -32,6 +32,10 @@
 #include <cmath>
 #include <SDL.h>
 
+#ifdef NUVIE_IOS
+#include "nuvie_ios_ui.h"
+#endif
+
 #include "nuvieDefs.h"
 #include "U6misc.h"
 #include "Configuration.h"
@@ -1521,6 +1525,10 @@ bool Screen::init_sdl2_window(uint16 scale)
     SDL_SetWindowTitle(sdlWindow, "Nuvie");
     //SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");  // make the scaled rendering look smoother.
     SDL_RenderSetLogicalSize(sdlRenderer, width*window_scale_w, (int)(height*window_scale_h)); //VGA non-square pixels.
+
+#ifdef NUVIE_IOS
+    nuvie_ios_setup_ui(sdlWindow);
+#endif
 
     set_fullscreen(fullscreen);
 

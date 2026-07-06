@@ -629,6 +629,8 @@ include_directories(views)
 #link_directories(/usr/local/lib)
 
 IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    include_directories(${CMAKE_SOURCE_DIR}/ios)
+    list(APPEND SOURCE_FILES ios/nuvie_ios_ui.mm ios/nuvie_ios_ui.h)
     add_executable(nuvie MACOSX_BUNDLE ${SOURCE_FILES})
 ELSE()
     add_executable(nuvie ${SOURCE_FILES})
