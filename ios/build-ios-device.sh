@@ -7,7 +7,8 @@
 #   - cmake (brew install cmake).
 #
 # Usage: ios/build-ios-device.sh <AppleTeamID> /path/to/ultima6-game-data
-#   e.g. ios/build-ios-device.sh A79HN5Y5AD "/path/to/ULTIMA6"
+#   e.g. ios/build-ios-device.sh ABCDE12345 "/path/to/ULTIMA6"
+# Find your Team ID with: security find-identity -v -p codesigning
 set -euo pipefail
 
 NUVIE_SRC="$(cd "$(dirname "$0")/.." && pwd)"
