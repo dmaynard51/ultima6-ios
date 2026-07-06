@@ -1,3 +1,26 @@
+# Ultima VI on iOS (Nuvie iOS port)
+
+**This fork adds an iOS (iPhone/iPad) build of Nuvie so you can play Ultima 6 on
+your phone with touch controls.**
+
+➡️ **Getting started / how to build & run: [ios/README.md](ios/README.md)**
+➡️ Touch controls: [ios/CONTROLS.md](ios/CONTROLS.md)
+
+Quick version:
+
+```sh
+# In the iOS Simulator (no Apple account needed):
+ios/build-ios-sim.sh /path/to/your/ultima6-data
+
+# On a real iPhone/iPad (needs your Apple Team ID):
+ios/build-ios-device.sh <YourTeamID> /path/to/your/ultima6-data
+```
+
+You supply your own legally-owned Ultima 6 data files; none are included here.
+Everything below is the original upstream Nuvie README (desktop builds).
+
+---
+
 # Nuvie - An Engine for Ultima6, Martian Dreams and Savage Empire.
 Windows: [![Windows Build Status](https://ci.appveyor.com/api/projects/status/github/nuvie/nuvie?branch=master&svg=true)](https://ci.appveyor.com/project/yuv422/nuvie)
 
