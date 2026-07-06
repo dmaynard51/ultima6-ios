@@ -107,7 +107,7 @@ static void nuvie_ios_setup()
 		"  <gamedir>%s/ultima6</gamedir>\n"
 		"  <savedir>%s</savedir>\n"
 		"  <sounddir>%s/data/sfx/u6</sounddir>\n"
-		"  <skip_intro>no</skip_intro>\n"
+		"  <skip_intro>yes</skip_intro>\n"
 		"  <music>native</music>\n"
 		"  <sfx>native</sfx>\n"
 		"  <patch_keys>%s/patchkeys.txt</patch_keys>\n"
