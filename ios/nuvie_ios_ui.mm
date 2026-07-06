@@ -29,8 +29,16 @@ static void nuvie_push_key(SDL_Keycode sym)
 	SDL_PushEvent(&e);
 }
 
+// Shared state (declared up-front so the button target class can use it).
+static bool g_ui_installed = false;
+static SDL_Window *g_window = NULL;
+static UIView *g_root_view = nil;   // the SDL view (fills the window)
+static CGRect g_full_frame;         // its normal, full-screen frame
+
 @interface NuvieButtonTarget : NSObject
 - (void)onTap:(UIButton *)sender;
+- (void)keyboardWillShow:(NSNotification *)note;
+- (void)keyboardWillHide:(NSNotification *)note;
 @end
 
 @implementation NuvieButtonTarget
@@ -42,25 +50,44 @@ static void nuvie_push_key(SDL_Keycode sym)
 	}
 	nuvie_push_key((SDL_Keycode)sender.tag);
 }
+
+// When the keyboard appears, scale the whole game down into the space above it
+// (via a transform, not a frame change: SDL rewrites its view's .frame in its
+// own keyboard handler, but leaves .transform alone) so nothing is cropped.
+- (void)keyboardWillShow:(NSNotification *)note
+{
+	if(g_root_view == nil)
+		return;
+	CGRect kb = [note.userInfo[UIKeyboardFrameEndUserInfoKey] CGRectValue];
+	CGRect kbLocal = [g_root_view convertRect:kb fromView:nil];
+	CGFloat H = g_full_frame.size.height;
+	CGFloat visibleH = kbLocal.origin.y;   // keyboard top, in view coords
+	if(H < 1.0 || visibleH < 120.0)
+		return;
+	CGFloat s = visibleH / H;              // scale so full height fits above kbd
+	// Scale around the centre, then lift so the top edge sits at y = 0.
+	CGAffineTransform tf = CGAffineTransformConcat(
+	    CGAffineTransformMakeScale(s, s),
+	    CGAffineTransformMakeTranslation(0, -H * (1.0 - s) / 2.0));
+	[UIView animateWithDuration:0.2 animations:^{ g_root_view.transform = tf; }];
+}
+
+- (void)keyboardWillHide:(NSNotification *)note
+{
+	if(g_root_view == nil)
+		return;
+	[UIView animateWithDuration:0.2 animations:^{
+		g_root_view.transform = CGAffineTransformIdentity;
+	}];
+}
 @end
 
 // Retain the target for the lifetime of the app so the button actions fire.
 static NuvieButtonTarget *g_btn_target = nil;
-static bool g_ui_installed = false;
-static SDL_Window *g_window = NULL;
 
 void nuvie_ios_show_keyboard(int show)
 {
 	if(show) {
-		// Position the text input rect low on the screen so SDL's keyboard
-		// handling lifts the game view up, keeping the area where U6 echoes
-		// what you type visible above the software keyboard.
-		if(g_window) {
-			int w = 0, h = 0;
-			SDL_GetWindowSize(g_window, &w, &h);
-			SDL_Rect r = { 0, (int)(h * 0.55), w, (int)(h * 0.45) };
-			SDL_SetTextInputRect(&r);
-		}
 		if(!SDL_IsTextInputActive())
 			SDL_StartTextInput();
 	} else {
@@ -113,8 +140,18 @@ void nuvie_ios_setup_ui(SDL_Window *window)
 
 	g_ui_installed = true;
 	g_window = window;
+	g_root_view = root;
+	g_full_frame = root.frame;
 	g_btn_target = [[NuvieButtonTarget alloc] init];
 	NuvieButtonTarget *t = g_btn_target;
+
+	// Resize the game to fit above the keyboard when it shows / hides.
+	[[NSNotificationCenter defaultCenter] addObserver:t
+	    selector:@selector(keyboardWillShow:)
+	    name:UIKeyboardWillShowNotification object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:t
+	    selector:@selector(keyboardWillHide:)
+	    name:UIKeyboardWillHideNotification object:nil];
 
 	// Work in the root view's coordinate space, respecting the safe area so
 	// nothing hides under the notch / home indicator.
