@@ -13,6 +13,7 @@ U6_GAMEDIR="${1:?Usage: build-ios-sim.sh /path/to/ultima6-game-data}"
 WORK="${NUVIE_SRC}/ios/build"
 SDL_VER="2.30.10"
 ARCH="arm64"   # arm64 simulator (Apple Silicon); use x86_64 on Intel Macs.
+BUNDLE_ID="${NUVIE_IOS_BUNDLE_ID:-info.nuvie.ultima6}"  # override via env var
 
 mkdir -p "$WORK"
 cd "$WORK"
@@ -48,7 +49,8 @@ cmake "$NUVIE_SRC" -G Xcode \
   -DSDL2_INCLUDE_DIR="$SDL_SRC/include" \
   -DSDL2_LIBRARY="$SDL_LIBDIR/libSDL2.a" \
   -DSDL2MAIN_LIBRARY="$SDL_LIBDIR/libSDL2main.a" \
-  -DNUVIE_U6_GAMEDIR="$U6_GAMEDIR"
+  -DNUVIE_U6_GAMEDIR="$U6_GAMEDIR" \
+  -DNUVIE_IOS_BUNDLE_ID="$BUNDLE_ID"
 xcodebuild -project nuvie.xcodeproj -target nuvie -configuration Release \
   -sdk iphonesimulator -arch "${ARCH}" CODE_SIGNING_ALLOWED=NO
 
@@ -58,4 +60,4 @@ echo "Built: $APP"
 echo "Run with:"
 echo "  xcrun simctl boot 'iPhone 15' 2>/dev/null; open -a Simulator"
 echo "  xcrun simctl install booted '$APP'"
-echo "  xcrun simctl launch booted info.nuvie.daniel.ultima6"
+echo "  xcrun simctl launch booted $BUNDLE_ID"

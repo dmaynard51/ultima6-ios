@@ -55,7 +55,7 @@ commands to install and launch it. Then:
 ```sh
 xcrun simctl boot "iPhone 15" 2>/dev/null; open -a Simulator
 xcrun simctl install booted ios/build/nuvie-build/Release-iphonesimulator/nuvie.app
-xcrun simctl launch booted info.nuvie.daniel.ultima6
+xcrun simctl launch booted info.nuvie.ultima6
 ```
 
 Rotate the Simulator to **landscape** (Device ▸ Rotate, or ⌘←) — Ultima 6 is a
@@ -74,6 +74,14 @@ there. Then:
 
 ```sh
 ios/build-ios-device.sh <YourTeamID> /path/to/your/ultima6-data
+```
+
+The app's bundle identifier defaults to `info.nuvie.ultima6`. To use your own
+(e.g. to match a specific provisioning profile), set `NUVIE_IOS_BUNDLE_ID`:
+
+```sh
+NUVIE_IOS_BUNDLE_ID=com.yourname.ultima6 \
+  ios/build-ios-device.sh <YourTeamID> /path/to/your/ultima6-data
 ```
 
 First-time device setup (one time each):

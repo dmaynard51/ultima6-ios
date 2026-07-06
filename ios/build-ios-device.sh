@@ -15,6 +15,8 @@ TEAM="${1:?Usage: build-ios-device.sh <AppleTeamID> /path/to/ultima6-data}"
 U6_GAMEDIR="${2:?Usage: build-ios-device.sh <AppleTeamID> /path/to/ultima6-data}"
 WORK="${NUVIE_SRC}/ios/build"
 SDL_VER="2.30.10"
+# Bundle id must match your provisioning profile. Override via env var.
+BUNDLE_ID="${NUVIE_IOS_BUNDLE_ID:-info.nuvie.ultima6}"
 
 mkdir -p "$WORK"; cd "$WORK"
 
@@ -50,10 +52,11 @@ cmake "$NUVIE_SRC" -G Xcode \
   -DSDL2_LIBRARY="$SDL_LIBDIR/libSDL2.a" \
   -DSDL2MAIN_LIBRARY="$SDL_LIBDIR/libSDL2main.a" \
   -DNUVIE_U6_GAMEDIR="$U6_GAMEDIR" \
-  -DNUVIE_IOS_TEAM="$TEAM"
+  -DNUVIE_IOS_TEAM="$TEAM" \
+  -DNUVIE_IOS_BUNDLE_ID="$BUNDLE_ID"
 
 # -allowProvisioningUpdates lets Xcode create/refresh the provisioning profile
-# for info.nuvie.daniel.ultima6 on your personal team automatically.
+# for the bundle id on your personal team automatically.
 xcodebuild -project nuvie.xcodeproj -target nuvie -configuration Release \
   -sdk iphoneos -arch arm64 -allowProvisioningUpdates \
   DEVELOPMENT_TEAM="$TEAM"
@@ -67,7 +70,7 @@ DEVICE_ID="$(xcrun devicectl list devices 2>/dev/null \
 if [ -n "${DEVICE_ID:-}" ]; then
   echo "Installing to device $DEVICE_ID ..."
   xcrun devicectl device install app --device "$DEVICE_ID" "$APP"
-  xcrun devicectl device process launch --device "$DEVICE_ID" info.nuvie.daniel.ultima6
+  xcrun devicectl device process launch --device "$DEVICE_ID" "$BUNDLE_ID"
 else
   echo "No available device found. Connect+unlock your iPhone and run:"
   echo "  xcrun devicectl device install app --device <id> '$APP'"

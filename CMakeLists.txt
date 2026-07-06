@@ -666,9 +666,15 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         ${FW_COREAUDIO} ${FW_COREVIDEO} ${FW_GAMECONTROLLER}
         ${FW_COREHAPTICS} ${FW_IMAGEIO} ${FW_COREFOUNDATION}
         ${FW_COREBLUETOOTH})
+    # App bundle identifier. Override with -DNUVIE_IOS_BUNDLE_ID=your.bundle.id
+    # (must match your provisioning profile when signing for a device).
+    IF(NOT NUVIE_IOS_BUNDLE_ID)
+        set(NUVIE_IOS_BUNDLE_ID "info.nuvie.ultima6")
+    ENDIF()
+
     set_target_properties(nuvie PROPERTIES
         MACOSX_BUNDLE_BUNDLE_NAME "Ultima VI"
-        MACOSX_BUNDLE_GUI_IDENTIFIER "info.nuvie.daniel.ultima6"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "${NUVIE_IOS_BUNDLE_ID}"
         MACOSX_BUNDLE_BUNDLE_VERSION "1.0"
         MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
         MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/ios/Info.plist.in"
@@ -681,7 +687,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         set_target_properties(nuvie PROPERTIES
             XCODE_ATTRIBUTE_CODE_SIGN_STYLE "Automatic"
             XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "${NUVIE_IOS_TEAM}"
-            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "info.nuvie.daniel.ultima6")
+            XCODE_ATTRIBUTE_PRODUCT_BUNDLE_IDENTIFIER "${NUVIE_IOS_BUNDLE_ID}")
     ENDIF()
 
     # Bundle Nuvie's own data/ directory into the app (flat iOS bundle layout).
