@@ -25,6 +25,6 @@
 #include <config.h>
 #endif
 
-#ifdef MACOSX
+#if defined(MACOSX) && !defined(NUVIE_IOS)
 int nuvieMain(int argc, char **argv);
 #endif

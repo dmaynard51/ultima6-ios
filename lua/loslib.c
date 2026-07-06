@@ -79,6 +79,12 @@
 
 static int os_execute (lua_State *L) {
   const char *cmd = luaL_optstring(L, 1, NULL);
+#if defined(NUVIE_IOS) || (defined(__APPLE__) && defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
+  /* system() is unavailable on iOS; report "no shell available". */
+  (void)cmd;
+  lua_pushboolean(L, 0);
+  return 1;
+#else
   int stat = system(cmd);
   if (cmd != NULL)
     return luaL_execresult(L, stat);
@@ -86,6 +92,7 @@ static int os_execute (lua_State *L) {
     lua_pushboolean(L, stat);  /* true if there is a shell */
     return 1;
   }
+#endif
 }
 
 

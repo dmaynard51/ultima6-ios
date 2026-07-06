@@ -174,6 +174,19 @@ bool Event::update() {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     idle = false;
+#ifdef NUVIE_IOS
+    // A two-finger tap toggles the iOS on-screen keyboard. SDL's iOS keyboard
+    // emits real key-down events for typed characters, so this makes the whole
+    // U6 keyboard command set (and conversation typing) reachable by touch.
+    if (event.type == SDL_FINGERDOWN
+        && SDL_GetNumTouchFingers(event.tfinger.touchId) == 2) {
+      if (SDL_IsTextInputActive())
+        SDL_StopTextInput();
+      else
+        SDL_StartTextInput();
+      continue; // don't dispatch the second finger as a game click
+    }
+#endif
     switch (gui->HandleEvent(&event)) {
       case GUI_PASS :
         if (handleEvent(&event) == false) {

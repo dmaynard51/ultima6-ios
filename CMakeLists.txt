@@ -20,6 +20,14 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DWIN32 -DHAVE_JOYSTICK_SUPPORT")
 ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
+# iOS port: reuse the Darwin/MACOSX code paths (SDL + CoreFoundation, all iOS-safe)
+# but flag NUVIE_IOS so main.cpp uses the standard SDL_main entry point instead of
+# the legacy macOS SDLMain (nuvieMain) wrapper.
+IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DLUA_USE_MACOSX -DUNIX -DMACOSX -DNUVIE_IOS")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DLUA_USE_MACOSX -DMACOSX -DNUVIE_IOS")
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -620,9 +628,69 @@ include_directories(views)
 
 #link_directories(/usr/local/lib)
 
-add_executable(nuvie ${SOURCE_FILES})
+IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    add_executable(nuvie MACOSX_BUNDLE ${SOURCE_FILES})
+ELSE()
+    add_executable(nuvie ${SOURCE_FILES})
+ENDIF()
 
 TARGET_LINK_LIBRARIES(nuvie ${SDL2_LIBRARY})
+
+# iOS: link the static SDL2 built for the simulator/device plus the system
+# frameworks SDL2 depends on, and mark the target as an app bundle.
+IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    find_library(FW_UIKIT UIKit)
+    find_library(FW_FOUNDATION Foundation)
+    find_library(FW_MOBILECORESERVICES MobileCoreServices)
+    find_library(FW_COREGRAPHICS CoreGraphics)
+    find_library(FW_QUARTZCORE QuartzCore)
+    find_library(FW_COREMOTION CoreMotion)
+    find_library(FW_OPENGLES OpenGLES)
+    find_library(FW_METAL Metal)
+    find_library(FW_AUDIOTOOLBOX AudioToolbox)
+    find_library(FW_AVFOUNDATION AVFoundation)
+    find_library(FW_COREAUDIO CoreAudio)
+    find_library(FW_COREVIDEO CoreVideo)
+    find_library(FW_GAMECONTROLLER GameController)
+    find_library(FW_COREHAPTICS CoreHaptics)
+    find_library(FW_IMAGEIO ImageIO)
+    find_library(FW_COREFOUNDATION CoreFoundation)
+    find_library(FW_COREBLUETOOTH CoreBluetooth)
+    TARGET_LINK_LIBRARIES(nuvie
+        ${SDL2MAIN_LIBRARY}
+        ${FW_UIKIT} ${FW_FOUNDATION} ${FW_MOBILECORESERVICES}
+        ${FW_COREGRAPHICS} ${FW_QUARTZCORE} ${FW_COREMOTION}
+        ${FW_OPENGLES} ${FW_METAL} ${FW_AUDIOTOOLBOX} ${FW_AVFOUNDATION}
+        ${FW_COREAUDIO} ${FW_COREVIDEO} ${FW_GAMECONTROLLER}
+        ${FW_COREHAPTICS} ${FW_IMAGEIO} ${FW_COREFOUNDATION}
+        ${FW_COREBLUETOOTH})
+    set_target_properties(nuvie PROPERTIES
+        MACOSX_BUNDLE_BUNDLE_NAME "Ultima VI"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "info.nuvie.daniel.ultima6"
+        MACOSX_BUNDLE_BUNDLE_VERSION "1.0"
+        MACOSX_BUNDLE_SHORT_VERSION_STRING "1.0"
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_SOURCE_DIR}/ios/Info.plist.in"
+        XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
+        XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "13.0")
+
+    # Bundle Nuvie's own data/ directory into the app (flat iOS bundle layout).
+    add_custom_command(TARGET nuvie POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_SOURCE_DIR}/data" "$<TARGET_BUNDLE_DIR:nuvie>/data"
+        COMMENT "Copying Nuvie data/ into app bundle")
+
+    # Bundle the original Ultima 6 game files. Point -DNUVIE_U6_GAMEDIR at the
+    # directory holding the U6 data (e.g. the extracted game or GOG install).
+    IF(NUVIE_U6_GAMEDIR)
+        add_custom_command(TARGET nuvie POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${NUVIE_U6_GAMEDIR}" "$<TARGET_BUNDLE_DIR:nuvie>/ultima6"
+            COMMENT "Copying Ultima 6 game data into app bundle")
+    ELSE()
+        message(WARNING "NUVIE_U6_GAMEDIR not set - app will build without U6 game data. "
+                        "Pass -DNUVIE_U6_GAMEDIR=/path/to/ultima6 to bundle the game.")
+    ENDIF()
+ENDIF()
 
 #IF(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 ##    TARGET_LINK_LIBRARIES(nuvie ${SDL_LIBS} -Wl,-framework,Cocoa)
