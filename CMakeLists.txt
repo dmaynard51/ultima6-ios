@@ -681,6 +681,14 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "iOS")
         XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY "1,2"
         XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "13.0")
 
+    # App icon: compile ios/Assets.xcassets (which holds the AppIcon set) into the
+    # bundle and tell Xcode's asset-catalog compiler which icon set to use.
+    target_sources(nuvie PRIVATE "${CMAKE_SOURCE_DIR}/ios/Assets.xcassets")
+    set_source_files_properties("${CMAKE_SOURCE_DIR}/ios/Assets.xcassets"
+        PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+    set_target_properties(nuvie PROPERTIES
+        XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon")
+
     # Physical-device code signing. Pass -DNUVIE_IOS_TEAM=<AppleTeamID> to sign
     # with automatic provisioning; omit it for unsigned Simulator builds.
     IF(NUVIE_IOS_TEAM)
