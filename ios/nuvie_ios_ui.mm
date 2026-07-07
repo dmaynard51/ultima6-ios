@@ -102,12 +102,18 @@ static bool g_kb_shown = false;     // our own record of keyboard visibility (SD
 	if(H < 1.0 || visibleH < 120.0)
 		return;
 	CGFloat s = visibleH / H;
-	CGFloat kbHeight = H - visibleH;       // how far to lift the buttons
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self applyKeyboardScale:s];
-		// Lift the (non-scaled) button overlay so nothing sits under the keyboard.
-		if(g_overlay)
-			g_overlay.transform = CGAffineTransformMakeTranslation(0, -kbHeight);
+		// Shrink the button overlay and lift it so the (now shorter) button
+		// stacks sit just above the keyboard without the top button riding too
+		// high. k scales the buttons; lift puts their bottom at the keyboard top.
+		if(g_overlay) {
+			const CGFloat k = 0.7;
+			CGFloat lift = H * 0.5 * (1.0 + k) - visibleH;
+			g_overlay.transform = CGAffineTransformConcat(
+			    CGAffineTransformMakeScale(k, k),
+			    CGAffineTransformMakeTranslation(0, -lift));
+		}
 	});
 }
 
