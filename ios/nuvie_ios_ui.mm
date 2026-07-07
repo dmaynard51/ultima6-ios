@@ -34,6 +34,21 @@ static bool g_ui_installed = false;
 static SDL_Window *g_window = NULL;
 static UIView *g_root_view = nil;   // the SDL view (fills the window)
 static CGRect g_full_frame;         // its normal, full-screen frame
+static UIView *g_overlay = nil;     // non-scaled button layer (sibling of the SDL view)
+static bool g_kb_shown = false;     // our own record of keyboard visibility (SDL's flag desyncs)
+
+// A transparent overlay that holds the buttons but lets touches on empty areas fall through
+// to the game view below (so tap-to-move still works). It lives on the UIWindow — NOT inside
+// the SDL view — so the keyboard-scale transform never resizes the buttons.
+@interface NuviePassthroughView : UIView
+@end
+@implementation NuviePassthroughView
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+{
+	UIView *hit = [super hitTest:point withEvent:event];
+	return hit == self ? nil : hit;   // empty area -> pass through to the game view
+}
+@end
 
 @interface NuvieButtonTarget : NSObject
 - (void)onTap:(UIButton *)sender;
@@ -104,15 +119,20 @@ void nuvie_ios_show_keyboard(int show)
 	if(show) {
 		if(!SDL_IsTextInputActive())
 			SDL_StartTextInput();
+		g_kb_shown = true;
 	} else {
 		if(SDL_IsTextInputActive())
 			SDL_StopTextInput();
+		g_kb_shown = false;
 	}
 }
 
 void nuvie_ios_toggle_keyboard(void)
 {
-	nuvie_ios_show_keyboard(SDL_IsTextInputActive() ? 0 : 1);
+	// Toggle off our own tracked state, not SDL_IsTextInputActive(). A cold StartTextInput
+	// can set the SDL flag true without actually presenting the keyboard, which desyncs the
+	// toggle — that's what caused "the first time needs two taps".
+	nuvie_ios_show_keyboard(g_kb_shown ? 0 : 1);
 }
 
 static UIButton *nuvie_make_button(NSString *title, long tag, CGRect frame,
@@ -167,6 +187,13 @@ void nuvie_ios_setup_ui(SDL_Window *window)
 	    selector:@selector(keyboardWillHide:)
 	    name:UIKeyboardWillHideNotification object:nil];
 
+	// Button overlay: a transparent, non-scaled sibling of the SDL view on the window.
+	// Buttons go here (not in the SDL view) so the keyboard-scale transform can't resize them.
+	g_overlay = [[NuviePassthroughView alloc] initWithFrame:uiwin.bounds];
+	g_overlay.backgroundColor = [UIColor clearColor];
+	g_overlay.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	[uiwin addSubview:g_overlay];
+
 	// Work in the root view's coordinate space, respecting the safe area so
 	// nothing hides under the notch / home indicator.
 	CGRect b = root.bounds;
@@ -183,13 +210,13 @@ void nuvie_ios_setup_ui(SDL_Window *window)
 	CGFloat dpx = left + 6.0;
 	CGFloat dpy = bottom - (DS * 3 + G * 2) - 10.0;
 	// up / left / right / down in a cross
-	[root addSubview:nuvie_make_button(@"▲", SDLK_UP,
+	[g_overlay addSubview:nuvie_make_button(@"▲", SDLK_UP,
 	         CGRectMake(dpx + DS + G, dpy, DS, DS), t)];
-	[root addSubview:nuvie_make_button(@"◀", SDLK_LEFT,
+	[g_overlay addSubview:nuvie_make_button(@"◀", SDLK_LEFT,
 	         CGRectMake(dpx, dpy + DS + G, DS, DS), t)];
-	[root addSubview:nuvie_make_button(@"▶", SDLK_RIGHT,
+	[g_overlay addSubview:nuvie_make_button(@"▶", SDLK_RIGHT,
 	         CGRectMake(dpx + (DS + G) * 2, dpy + DS + G, DS, DS), t)];
-	[root addSubview:nuvie_make_button(@"▼", SDLK_DOWN,
+	[g_overlay addSubview:nuvie_make_button(@"▼", SDLK_DOWN,
 	         CGRectMake(dpx + DS + G, dpy + (DS + G) * 2, DS, DS), t)];
 
 	// ---- Right side: action buttons, stacked bottom-right ----
@@ -199,7 +226,16 @@ void nuvie_ios_setup_ui(SDL_Window *window)
 	CGFloat bx = right - S - 8.0;
 	CGFloat by = bottom - (S * 5 + G * 4) - 10.0;
 	for(int i = 0; i < 5; i++) {
-		[root addSubview:nuvie_make_button(labels[i], tags[i],
+		[g_overlay addSubview:nuvie_make_button(labels[i], tags[i],
 		         CGRectMake(bx, by + (S + G) * i, S, S), t)];
 	}
+
+	// Pre-warm SDL's text-input responder so the FIRST keyboard tap presents it on a single
+	// press. A cold SDL_StartTextInput() creates the hidden text field but doesn't reliably
+	// present the keyboard the first time; priming it once now (then stopping) fixes that.
+	dispatch_async(dispatch_get_main_queue(), ^{
+		SDL_StartTextInput();
+		SDL_StopTextInput();
+		g_kb_shown = false;
+	});
 }
