@@ -19,6 +19,20 @@ ios/build-ios-device.sh <YourTeamID> /path/to/your/ultima6-data
 You supply your own legally-owned Ultima 6 data files; none are included here.
 Everything below is the original upstream Nuvie README (desktop builds).
 
+## ☕ Support this port
+
+This iOS port is a free, open-source labor of love — building it, adding touch
+controls, and keeping it working takes real time. If it let you play Ultima 6 on
+your phone and you'd like to say thanks, a coffee is hugely appreciated (and
+completely optional):
+
+- ☕ **[Buy me a coffee](https://buymeacoffee.com/YOUR_USERNAME)**
+- 💜 **[GitHub Sponsors](https://github.com/sponsors/dmaynard51)**
+
+To be clear: you're supporting the **porting work**, not the game. Ultima 6 is
+Electronic Arts' property — you bring your own legally-owned data files, and
+nothing here includes or sells the game. Thank you! 🙏
+
 ---
 
 # Nuvie - An Engine for Ultima6, Martian Dreams and Savage Empire.
