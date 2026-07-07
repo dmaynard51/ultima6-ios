@@ -102,12 +102,22 @@ static bool g_kb_shown = false;     // our own record of keyboard visibility (SD
 	if(H < 1.0 || visibleH < 120.0)
 		return;
 	CGFloat s = visibleH / H;
-	dispatch_async(dispatch_get_main_queue(), ^{ [self applyKeyboardScale:s]; });
+	CGFloat kbHeight = H - visibleH;       // how far to lift the buttons
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self applyKeyboardScale:s];
+		// Lift the (non-scaled) button overlay so nothing sits under the keyboard.
+		if(g_overlay)
+			g_overlay.transform = CGAffineTransformMakeTranslation(0, -kbHeight);
+	});
 }
 
 - (void)keyboardWillHide:(NSNotification *)note
 {
-	dispatch_async(dispatch_get_main_queue(), ^{ [self applyKeyboardScale:1.0]; });
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self applyKeyboardScale:1.0];
+		if(g_overlay)
+			g_overlay.transform = CGAffineTransformIdentity;
+	});
 }
 @end
 
