@@ -26,7 +26,7 @@ controls, and keeping it working takes real time. If it let you play Ultima 6 on
 your phone and you'd like to say thanks, a coffee is hugely appreciated (and
 completely optional):
 
-- ☕ **[Buy me a coffee](https://buymeacoffee.com/YOUR_USERNAME)**
+- ☕ **[Buy me a coffee (Ko-fi)](https://ko-fi.com/dmaynard)**
 - 💜 **[GitHub Sponsors](https://github.com/sponsors/dmaynard51)**
 
 To be clear: you're supporting the **porting work**, not the game. Ultima 6 is
