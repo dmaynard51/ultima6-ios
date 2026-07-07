@@ -8,12 +8,27 @@
 #
 # Usage: ios/build-ios-device.sh <AppleTeamID> /path/to/ultima6-game-data
 #   e.g. ios/build-ios-device.sh ABCDE12345 "/path/to/ULTIMA6"
-# Find your Team ID with: security find-identity -v -p codesigning
+#
+# Your Team ID is a 10-character code (letters + digits), e.g. ABCDE12345.
+# Get it from https://developer.apple.com/account -> Membership details -> "Team ID".
+# NOTE: pass ONLY the 10-char code. Do NOT pass your name or the whole
+# "Apple Development: John Doe (ABCDE12345)" line — just the part in the parentheses.
 set -euo pipefail
 
 NUVIE_SRC="$(cd "$(dirname "$0")/.." && pwd)"
 TEAM="${1:?Usage: build-ios-device.sh <AppleTeamID> /path/to/ultima6-data}"
 U6_GAMEDIR="${2:?Usage: build-ios-device.sh <AppleTeamID> /path/to/ultima6-data}"
+
+# A Team ID is exactly 10 letters/digits. Catch the #1 mistake (pasting the whole
+# name string) here with a clear message instead of a cryptic xcodebuild failure.
+if ! [[ "$TEAM" =~ ^[A-Za-z0-9]{10}$ ]]; then
+  echo "ERROR: '$TEAM' is not a valid Apple Team ID." >&2
+  echo "  A Team ID is exactly 10 letters/digits, e.g. ABCDE12345." >&2
+  echo "  Pass ONLY that code — NOT your name, and NOT the full" >&2
+  echo "  'Apple Development: John Doe (ABCDE12345)' line (just the part in parentheses)." >&2
+  echo "  Find it at: https://developer.apple.com/account -> Membership details -> Team ID" >&2
+  exit 1
+fi
 WORK="${NUVIE_SRC}/ios/build"
 SDL_VER="2.30.10"
 # Bundle id must match your provisioning profile. Override via env var.

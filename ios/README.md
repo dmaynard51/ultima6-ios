@@ -63,18 +63,29 @@ landscape game.
 
 ## 4. Build, sign & run on a real iPhone/iPad
 
-You need your Apple **Team ID**. To find it:
+You need your Apple **Team ID** — a **10-character code** of letters and digits,
+like `ABCDE12345`.
+
+> ⚠️ **Pass ONLY the 10-character code.** Not your name, and **not** the whole
+> `Apple Development: Your Name (ABCDE12345)` string — just the part inside the
+> parentheses. Passing the full line is the #1 reason the build fails.
+
+Where to find it (either works):
+
+- **Apple Developer site (clearest):** [developer.apple.com/account](https://developer.apple.com/account)
+  ▸ **Membership details** ▸ copy the value labelled **Team ID**.
+- **Terminal:** `security find-identity -v -p codesigning` — this prints
+  `"Apple Development: Your Name (ABCDE12345)"`; your Team ID is the
+  `ABCDE12345` **inside the parentheses only**.
+- **Xcode:** Settings ▸ Accounts ▸ add your Apple ID; the team (with its ID) is listed there.
+
+Then run it with just that code:
 
 ```sh
-security find-identity -v -p codesigning     # shows "Apple Development: Your Name (XXXXXXXXXX)"
+ios/build-ios-device.sh ABCDE12345 /path/to/your/ultima6-data
 ```
 
-…or open Xcode ▸ Settings ▸ Accounts and add your Apple ID; the team is listed
-there. Then:
-
-```sh
-ios/build-ios-device.sh <YourTeamID> /path/to/your/ultima6-data
-```
+(The script now checks the format and gives a clear error if you paste the wrong thing.)
 
 The app's bundle identifier defaults to `info.nuvie.ultima6`. To use your own
 (e.g. to match a specific provisioning profile), set `NUVIE_IOS_BUNDLE_ID`:
