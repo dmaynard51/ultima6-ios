@@ -104,12 +104,14 @@ or Mac** with a **free Apple ID**.
   app and it installs permanently. In the EU, **AltStore PAL** also needs no computer.
 
 **3. Add your own game files** (the app ships with **none**). You need your legally-owned
-Ultima VI DOS files — the folder that contains **`ULTIMA6.EXE`** (e.g. from your GOG copy). Copy them
+Ultima VI DOS files — the folder that contains **`ULTIMA6.EXE`** and its **`SAVEGAME`** subfolder (e.g. from your GOG copy). Copy them
 onto the phone by either:
 - **Files app → On My iPhone → Ultima VI** → paste your game files in, **or**
 - **iTunes / Finder → phone → File Sharing → Ultima VI** → drag the files into its Documents box.
 
-> ⚠️ **Put the files LOOSE at the root — not inside a folder.** That Ultima VI folder *is* the
+> ⚠️ **Put the game files at the root — but keep the `SAVEGAME` subfolder as-is.** Copy the
+> *contents* of your Ultima VI folder in (so `ULTIMA6.EXE` etc. sit at the root, with
+> `SAVEGAME` as a subfolder). Don't wrap it all in one extra folder. That Ultima VI folder *is* the
 > game's `C:\` drive, and the app auto-runs `ULTIMA6.EXE` from `C:\`. If you drag a *folder* in
 > (so the files land in `C:\YourFolder\`), the app opens to a bare **`C:\>`** prompt instead
 > of the game. Fix: in the **Files** app, open that subfolder → **•••  ▸ Select ▸ Select All**
