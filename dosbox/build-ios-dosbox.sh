@@ -45,7 +45,7 @@ if ! [[ "$TEAM" =~ ^[A-Za-z0-9]{10}$ ]]; then
   echo "ERROR: '$TEAM' is not a valid Apple Team ID (10 letters/digits)." >&2
   exit 1
 fi
-if [ ! -f "$U6_SRC/ULTIMA6.EXE" ] && [ ! -f "$U6_SRC/ultima6.exe" ]; then
+if [ -z "${U6DOS_PATCH_ONLY:-}" ] && [ ! -f "$U6_SRC/ULTIMA6.EXE" ] && [ ! -f "$U6_SRC/ultima6.exe" ]; then
   echo "ERROR: no Ultima VI data at:" >&2
   echo "  $U6_SRC" >&2
   echo "Pass the folder with ULTIMA6.EXE as the 2nd argument." >&2
@@ -301,6 +301,11 @@ handler="\n- (void)dpAudioInterruption:(NSNotification *)note {\n    if ([note.u
 i=s.rfind("@end"); s=s[:i]+handler.lstrip()+s[i+len("@end"):]
 open(p,"w").write(s); print("  audio fix applied")
 PYEOF
+fi
+
+if [ -n "${U6DOS_PATCH_ONLY:-}" ]; then
+  echo "Patch-only: dospad cloned + patched at $DOSPAD (no build, no install)."
+  exit 0
 fi
 
 # 4. Build + sign.
