@@ -283,6 +283,54 @@ PY
 fi
 plutil -replace UISupportedInterfaceOrientations -json '["UIInterfaceOrientationLandscapeLeft","UIInterfaceOrientationLandscapeRight"]' "$DOSPAD/Resources/iDOS-Info.plist" 2>/dev/null || true
 
+# 3g. Make the letterbox bars live. The game is 4:3, so on a modern phone the aspect-fit
+#     screen leaves wide black bars left and right (and the reserve-keyboard patch in 3f
+#     adds one below). Those bars sit OUTSIDE the screen view's frame, so UIKit never
+#     routed touches there: a drag that strayed into a bar stopped moving the cursor and
+#     a tap in one did nothing. Hit-test against the whole container instead, so the dead
+#     space drives the mouse like the rest of the screen. Overriding pointInside: is
+#     enough -- hit testing is not clipped to a subview's frame, it asks the view -- and
+#     the keyboard/gamepad are added after the screen view, so they stay on top and keep
+#     their own touches. In absolute-pointer mode a bar maps outside the 640x400 screen,
+#     so clamp the coordinate to the edge rather than hand DOSBox an off-screen point.
+SV="$DOSPAD/dospad/Main/DPScreenView.m"
+if [ -f "$SV" ] && ! grep -q "Ultima letterbox-touch" "$SV"; then
+  echo "Patching the screen view so the letterbox bars accept touches ..."
+  python3 - "$SV" <<'PY'
+import sys
+p = sys.argv[1]; s = open(p).read()
+anchor = "@implementation DPScreenView\n"
+assert anchor in s, "DPScreenView @implementation not found"
+inject = anchor + '''
+// Ultima letterbox-touch: accept touches anywhere in the container, not just inside the
+// 4:3 screen, so the black bars around it move and click the mouse too.
+- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *)event
+{
+    UIView *container = self.superview;
+    if (!container) {
+        return [super pointInside:point withEvent:event];
+    }
+    return CGRectContainsPoint(container.bounds, [self convertPoint:point toView:container]);
+}
+
+// A point from a bar lies outside the screen's bounds, which only matters in absolute
+// (direct-touch) pointer mode -- clamp it to the edge instead of sending DOSBox a
+// coordinate off the screen. Relative mode only uses deltas and is unaffected.
+- (void)sendMouseCoordinate:(int)index x:(CGFloat)x y:(CGFloat)y
+{
+    CGSize size = self.bounds.size;
+    if (size.width > 0 && size.height > 0) {
+        x = MAX(0, MIN(x, size.width  - 1));
+        y = MAX(0, MIN(y, size.height - 1));
+    }
+    [super sendMouseCoordinate:index x:x y:y];
+}
+'''
+open(p, "w").write(s.replace(anchor, inject, 1))
+print("  letterbox touch patched")
+PY
+fi
+
 # 3z. Audio: mix with other apps + recover after interruptions, so game sound doesn't die
 #      when another app plays audio (notification, call, music, YouTube, etc.).
 AD="$DOSPAD/dospad/Main/DPAppDelegate.m"
